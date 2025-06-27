@@ -521,3 +521,217 @@ section, .card {
   background-position: right 8px center;
   background-size: 18px 18px;
 }
+
+.icon-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-btn:hover {
+  filter: brightness(1.1);
+}
+.summary-col {
+  text-align: center;
+}
+.summary-label {
+  font-size: 0.9em;
+  color: #BBBBBB;
+}
+.summary-count {
+  font-size: 1.5em;
+  font-weight: 700;
+  color: #fff;
+}
+.summary-sum {
+  font-size: 1.1em;
+  color: #C27BA1;
+}
+
+/* Sidebar Navigation */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 240px;
+  background: #181820;
+  padding: 24px;
+  border-right: 1px solid #2C2C2C;
+  box-sizing: border-box;
+}
+
+.sidebar-title {
+  font-size: 1.5em;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 32px;
+  letter-spacing: 1px;
+}
+
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu a {
+  color: #BBBBBB;
+  text-decoration: none;
+  font-size: 1.1em;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: block;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.sidebar-menu a:hover {
+  background: #2C2C2C;
+  color: #fff;
+}
+
+.sidebar-menu a.active {
+  background: #A64D79;
+  color: #fff;
+}
+
+/* Adjust main content to make space for the sidebar */
+.main-content {
+  margin-left: 240px;
+  padding: 1px 24px; /* Added padding */
+}
+
+/* Styles for quotes page */
+.quotes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+.quote-card {
+    background: #23232b;
+    border: 1px solid #2C2C2C;
+    border-radius: 12px;
+    padding: 18px 22px;
+    box-shadow: 0 1px 4px rgba(20,10,30,0.05);
+    display: flex;
+    flex-direction: column;
+    transition: border 0.2s;
+}
+.quote-card:hover {
+    border: 1px solid #C27BA1;
+}
+.quote-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+.quote-main {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.quote-title {
+    font-size: 1.15em;
+    font-weight: 600;
+    color: #fff;
+}
+.quote-meta {
+    color: #BBBBBB;
+    font-size: 0.98em;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.quote-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    min-width: 120px;
+}
+.quote-amount {
+    color: #C27BA1;
+    font-size: 1.1em;
+    font-weight: 700;
+}
+@media (max-width: 700px) {
+    .quote-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .quote-actions {
+        align-items: flex-start;
+        min-width: 0;
+    }
+}
+.icon-btn {
+    padding: 4px 12px;
+    font-size: 0.98em;
+    border-radius: 6px;
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    min-width: 0;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.icon-btn:hover {
+    filter: brightness(1.1);
+}
+.summary-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 90px;
+    flex: 1;
+}
+.summary-label {
+    color: #C27BA1;
+    font-weight: 700;
+    font-size: 1.05em;
+    margin-bottom: 2px;
+}
+.summary-count {
+    font-size: 1.3em;
+    font-weight: 700;
+    color: #fff;
+}
+.summary-sum {
+    color: #BBBBBB;
+    font-size: 1em;
+    font-weight: 400;
+    margin-top: 2px;
+}
+
+nav.sidebar ul li a {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    padding: 12px 32px;
+    color: #BBBBBB;
+    text-decoration: none;
+    border-left: 4px solid transparent;
+    transition: background 0.18s, color 0.18s, border 0.18s;
+}
+
+.sidebar-link i {
+    width: 20px;
+    text-align: center;
+    font-size: 1.1em;
+}
+
+.sidebar-link:hover, .sidebar-link.active {
+    background: #23232b;
+}
