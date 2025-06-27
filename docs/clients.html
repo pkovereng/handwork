@@ -212,26 +212,33 @@
         font-family: 'Poppins', 'Segoe UI', 'Arial', sans-serif;
         background: transparent;
     }
-    .clients-table th, .clients-table td {
+    .clients-table th {
         border-right: 1px solid #2C2C2C;
         border-bottom: 1px solid #2C2C2C;
         padding: 7px 8px;
         text-align: center;
-        font-size: 0.97em;
-        background: #23232b;
-        color: #fff;
-        vertical-align: middle;
-    }
-    .clients-table th {
+        font-size: 1em;
         background: #181820;
         color: #C27BA1;
         font-weight: 700;
         position: sticky;
         top: 0;
         z-index: 2;
-        font-size: 1em;
         cursor:pointer;
         user-select:none;
+    }
+    .clients-table td {
+        border-right: 1px solid #2C2C2C;
+        border-bottom: 1px solid #2C2C2C;
+        padding: 7px 8px;
+        text-align: center;
+        font-size: 0.97em;
+        color: #fff;
+        vertical-align: middle;
+        border-top: 1px solid #2C2C2C;
+    }
+    .clients-table tr:first-child td {
+        border-top: none;
     }
     .clients-table td.status-cell {
         background: var(--status-bg, #888);
@@ -264,12 +271,6 @@
     }
     .clients-table th:last-child, .clients-table td:last-child {
         border-right: none;
-    }
-    .clients-table tr:nth-child(even) td {
-        background: #23232b;
-    }
-    .clients-table tr:nth-child(odd) td {
-        background: #282838;
     }
     .clients-table tr:hover td {
         background: #2C2C2C;
