@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clients - Handwork CRM</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body>
+    <div id="menu-placeholder"></div>
+    <div class="main-content">
+        <div class="container" style="max-width:1000px; margin:0 auto;" x-data="clientsApp()">
+            <div class="section-header" style="font-size:2em; margin-bottom:24px;">Clients</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <button class="btn-green" @click="addClient">+ New Client</button>
+                    <input type="text" class="search-input" placeholder="Search clients..." x-model="search" style="flex:2; min-width:180px; max-width:320px; background:#1E1E1E; color:#fff; border:1px solid #2C2C2C; border-radius:8px; padding:8px 14px; font-size:1em;"/>
+                </div>
+                <button class="csv-btn" @click="downloadCSV">Download CSV</button>
+            </div>
+            <div class="clients-list-table-wrapper">
+                <table class="clients-table">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-cell"><input type="checkbox" disabled></th>
+                            <th @click="setSort('name')" :class="sortClass('name')">Name</th>
+                            <th @click="setSort('address')" :class="sortClass('address')">Address</th>
+                            <th @click="setSort('status')" :class="sortClass('status')">Status</th>
+                            <th @click="setSort('email')" :class="sortClass('email')">Email</th>
+                            <th @click="setSort('phone')" :class="sortClass('phone')">Phone</th>
+                            <th style="width:120px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="client in filteredAndSortedClients" :key="client.id">
+                            <tr>
+                                <td class="checkbox-cell"><input type="checkbox" disabled></td>
+                                <td x-text="client.name"></td>
+                                <td x-text="client.address || '-' "></td>
+                                <td class="status-cell" :style="'background:' + statusColor(client.status) + ' !important;'">
+                                    <select x-model="client.status" @change="updateStatus(client)" style="background:transparent; color:#fff; border:none; font-weight:600; text-align:center; width:100%; outline:none;">
+                                        <template x-for="option in statusOptions" :key="option">
+                                            <option :value="option" x-text="option" :style="'background:' + statusColor(option) + '; color:' + (option==='Offer Sent'||option==='Negotiation'?'#23232b':'#fff')"></option>
+                                        </template>
+                                    </select>
+                                </td>
+                                <td x-text="client.email"></td>
+                                <td class="phone-cell" x-text="client.phone"></td>
+                                <td>
+                                    <button class="btn-small" @click="openClient(client.id)">Open</button>
+                                </td>
+                            </tr>
+                        </template>
+                        <template x-if="filteredAndSortedClients.length === 0">
+                            <tr><td colspan="7" style="color:#BBBBBB; text-align:center; padding:32px 0;">No clients found.</td></tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+            <div x-show="showModal" class="modal-overlay" @click.self="closeModal()" x-transition>
+                <div class="modal-card">
+                    <div class="modal-header">Edit Client</div>
+                    <form @submit.prevent="saveClient()">
+                        <div class="modal-field">
+                            <label>Name</label>
+                            <input type="text" x-model="modalClient.name" required />
+                        </div>
+                        <div class="modal-field">
+                            <label>Address</label>
+                            <input type="text" x-model="modalClient.address" />
+                        </div>
+                        <div class="modal-field">
+                            <label>Email</label>
+                            <input type="email" x-model="modalClient.email" />
+                        </div>
+                        <div class="modal-field">
+                            <label>Phone</label>
+                            <input type="text" x-model="modalClient.phone" />
+                        </div>
+                        <div class="modal-field">
+                            <label>Status</label>
+                            <select x-model="modalClient.status">
+                                <template x-for="option in statusOptions" :key="option">
+                                    <option :value="option" x-text="option"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="icon-btn" style="background:#23232b; color:#fff;" @click="closeModal()">Cancel</button>
+                            <button type="submit" class="icon-btn" style="background:#27ae60;">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    function clientsApp() {
+        return {
+            search: '',
+            clients: [
+                { id: 1, name: 'Ola Nordmann', address: 'Storgata 1', status: 'Lead', email: 'ola@email.com', phone: '400 00 000', nextStep: 'Call' },
+                { id: 2, name: 'Kari Hansen', address: 'Bakerveien 2', status: 'Contacted', email: 'kari@email.com', phone: '401 11 111', nextStep: 'Send offer' },
+                { id: 3, name: 'Per Persen', address: 'Trondheimsveien 3', status: 'Offer Sent', email: 'per@email.com', phone: '402 22 222', nextStep: 'Follow up' },
+                { id: 4, name: 'Anne Olsen', address: 'Fjellveien 4', status: 'Negotiation', email: 'anne@email.com', phone: '403 33 333', nextStep: 'Negotiate' },
+                { id: 5, name: 'Bjørn Berg', address: 'Solbakken 5', status: 'Won', email: 'bjorn@email.com', phone: '404 44 444', nextStep: 'Start project' },
+                { id: 6, name: 'Lise Lunde', address: 'Havnegata 6', status: 'Lost', email: 'lise@email.com', phone: '405 55 555', nextStep: '-' }
+            ],
+            statusOptions: ['Lead', 'Contacted', 'Offer Sent', 'Negotiation', 'Won', 'Lost'],
+            sortBy: 'name',
+            sortAsc: true,
+            setSort(field) {
+                if(this.sortBy === field) { this.sortAsc = !this.sortAsc; }
+                else { this.sortBy = field; this.sortAsc = true; }
+            },
+            sortClass(field) {
+                return this.sortBy === field ? (this.sortAsc ? 'sorted-asc' : 'sorted-desc') : '';
+            },
+            get filteredAndSortedClients() {
+                let arr = this.clients.filter(c => {
+                    const s = this.search.toLowerCase();
+                    return (
+                        c.name.toLowerCase().includes(s) ||
+                        (c.address||'').toLowerCase().includes(s) ||
+                        c.email.toLowerCase().includes(s) ||
+                        c.phone.includes(s) ||
+                        c.status.toLowerCase().includes(s)
+                    );
+                });
+                arr = arr.sort((a, b) => {
+                    let fa = (a[this.sortBy]||'').toString().toLowerCase();
+                    let fb = (b[this.sortBy]||'').toString().toLowerCase();
+                    if(fa < fb) return this.sortAsc ? -1 : 1;
+                    if(fa > fb) return this.sortAsc ? 1 : -1;
+                    return 0;
+                });
+                return arr;
+            },
+            addClient() {
+                alert('Add client (not implemented)');
+            },
+            editClient(client) {
+                this.modalClient = { ...client };
+                this.showModal = true;
+            },
+            closeModal() {
+                this.showModal = false;
+            },
+            saveClient() {
+                const idx = this.clients.findIndex(c => c.id === this.modalClient.id);
+                if(idx !== -1) this.clients[idx] = { ...this.modalClient };
+                this.showModal = false;
+            },
+            deleteClient(id) {
+                if(confirm('Are you sure you want to delete this client?')) {
+                    this.clients = this.clients.filter(c => c.id !== id);
+                }
+            },
+            statusColor(status) {
+                const map = {
+                    'lead': '#A64D79',
+                    'contacted': '#C27BA1',
+                    'offer sent': '#D5A6BD',
+                    'negotiation': '#EAD1DC',
+                    'won': '#27ae60',
+                    'lost': '#D9534F'
+                };
+                return map[status.toLowerCase()] || '#888';
+            },
+            updateStatus(client) {
+                // Here you could add API call or localStorage update if needed
+            },
+            showModal: false,
+            modalClient: {},
+            downloadCSV() {
+                const rows = [
+                    ['Name','Address','Status','Email','Phone'],
+                    ...this.filteredAndSortedClients.map(c => [c.name, c.address||'', c.status, c.email, c.phone])
+                ];
+                const csv = rows.map(r => r.map(x => '"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\n');
+                const blob = new Blob([csv], {type: 'text/csv'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'clients.csv';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            },
+            openClient(id) {
+                window.location.href = `customer.html?id=${id}`;
+            }
+        }
+    }
+    </script>
+    <script src="js/menu.js" defer></script>
+    <style>
+    .clients-list-table-wrapper {
+        background: #23232b;
+        border: 1px solid #2C2C2C;
+        border-radius: 12px;
+        margin-bottom: 18px;
+        box-shadow: 0 1px 4px rgba(20,10,30,0.05);
+        overflow-x: auto;
+    }
+    .clients-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-family: 'Poppins', 'Segoe UI', 'Arial', sans-serif;
+        background: transparent;
+    }
+    .clients-table th, .clients-table td {
+        border-right: 1px solid #2C2C2C;
+        border-bottom: 1px solid #2C2C2C;
+        padding: 7px 8px;
+        text-align: center;
+        font-size: 0.97em;
+        background: #23232b;
+        color: #fff;
+        vertical-align: middle;
+    }
+    .clients-table th {
+        background: #181820;
+        color: #C27BA1;
+        font-weight: 700;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        font-size: 1em;
+        cursor:pointer;
+        user-select:none;
+    }
+    .clients-table td.status-cell {
+        background: var(--status-bg, #888);
+        color: #fff;
+        font-weight: 600;
+        border-radius: 0;
+        padding: 7px 8px;
+        text-align: center;
+    }
+    .clients-table td.phone-cell {
+        font-family: 'Poppins', 'Segoe UI', 'Arial', sans-serif;
+        letter-spacing: 1.5px;
+    }
+    .clients-table th.checkbox-cell, .clients-table td.checkbox-cell {
+        width: 22px;
+        min-width: 22px;
+        max-width: 22px;
+        text-align: center;
+        padding: 0;
+        cursor:default;
+    }
+    .clients-table td.checkbox-cell input[type="checkbox"] {
+        width: 14px;
+        height: 14px;
+        accent-color: #C27BA1;
+        margin: 0;
+    }
+    .clients-table tr:last-child td {
+        border-bottom: none;
+    }
+    .clients-table th:last-child, .clients-table td:last-child {
+        border-right: none;
+    }
+    .clients-table tr:nth-child(even) td {
+        background: #23232b;
+    }
+    .clients-table tr:nth-child(odd) td {
+        background: #282838;
+    }
+    .clients-table tr:hover td {
+        background: #2C2C2C;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 8px;
+        font-size: 0.98em;
+        font-weight: 600;
+        color: #fff;
+        background: #888;
+        letter-spacing: 0.5px;
+        min-width: 80px;
+        text-align: center;
+    }
+    .status-lead { background: #A64D79; }
+    .status-contacted { background: #C27BA1; }
+    .status-offer-sent { background: #D5A6BD; color: #23232b; }
+    .status-negotiation { background: #EAD1DC; color: #23232b; }
+    .status-won { background: #27ae60; }
+    .status-lost { background: #D9534F; }
+    .sorted-asc::after { content: ' ↑'; color: #C27BA1; }
+    .sorted-desc::after { content: ' ↓'; color: #C27BA1; }
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(18,18,18,0.85);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-card {
+        background: #23232b;
+        border-radius: 14px;
+        box-shadow: 0 4px 32px rgba(20,10,30,0.18);
+        padding: 32px 32px 24px 32px;
+        min-width: 320px;
+        max-width: 98vw;
+        width: 370px;
+        color: #fff;
+        font-family: 'Poppins', 'Segoe UI', 'Arial', sans-serif;
+    }
+    .modal-header {
+        font-size: 1.3em;
+        font-weight: 700;
+        color: #C27BA1;
+        margin-bottom: 18px;
+    }
+    .modal-field {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 14px;
+    }
+    .modal-field label {
+        font-size: 1em;
+        color: #C27BA1;
+        margin-bottom: 4px;
+        font-weight: 600;
+    }
+    .modal-field input, .modal-field select {
+        background: #181820;
+        color: #fff;
+        border: 1px solid #2C2C2C;
+        border-radius: 7px;
+        padding: 8px 12px;
+        font-size: 1em;
+        font-family: 'Poppins', 'Segoe UI', 'Arial', sans-serif;
+        margin-bottom: 2px;
+    }
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 10px;
+    }
+    .csv-btn {
+        background: #181820;
+        color: #BBBBBB;
+        border: 1px solid #2C2C2C;
+        border-radius: 6px;
+        font-size: 0.95em;
+        padding: 4px 12px;
+        cursor: pointer;
+        transition: background 0.18s, color 0.18s;
+        font-family: 'Poppins', 'Segoe UI', 'Arial', sans-serif;
+        margin: 0;
+        box-shadow: none;
+    }
+    .csv-btn:hover {
+        background: #23232b;
+        color: #fff;
+    }
+    </style>
+</body>
+</html> 

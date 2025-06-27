@@ -1,0 +1,39 @@
+.main-content {
+  flex: 1;
+}
+
+.top-menu {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #181820;
+    padding: 16px 40px;
+    border-bottom: 1px solid #2C2C2C;
+}
+
+.top-menu-title {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1px;
+}
+
+.top-menu-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 24px;
+}
+
+.top-menu-links a {
+    color: #A64D79;
+    text-decoration: none;
+    font-size: 1.1em;
+    font-weight: 500;
+    transition: color 0.18s;
+}
+
+.top-menu-links a:hover, .top-menu-links a.active {
+    color: #fff;
+} 

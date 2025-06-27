@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Quotes</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body>
+    <div id="menu-placeholder"></div>
+    <div class="main-content">
+        <div class="container" style="max-width:900px; margin:0 auto;" x-data="quotesApp()">
+            <div class="section-header" style="font-size:2em; margin-bottom:24px;">All Quotes</div>
+            <div style="display:flex; gap:18px; align-items:center; margin-bottom:18px;">
+                <input type="text" class="search-input" placeholder="Search quotes..." x-model="search" style="flex:2; min-width:180px; max-width:320px; background:#1E1E1E; color:#fff; border:1px solid #2C2C2C; border-radius:8px; padding:8px 14px; font-size:1em;"/>
+                <select x-model="sortOption" class="sort-dropdown" style="background:#1E1E1E; color:#fff; border:1px solid #2C2C2C; border-radius:8px; padding:8px 14px; font-size:1em; min-width:170px;">
+                    <option value="date-desc">Newest &gt; Oldest</option>
+                    <option value="date-asc">Oldest &gt; Newest</option>
+                    <option value="amount-desc">Price high &gt; low</option>
+                    <option value="amount-asc">Price low &gt; high</option>
+                    <option value="customer-asc">Customer A &gt; Z</option>
+                    <option value="customer-desc">Customer Z &gt; A</option>
+                </select>
+            </div>
+            <div class="quotes-summary" style="display:flex; gap:32px; margin-bottom:18px; align-items:center; background:#23232b; border:1px solid #2C2C2C; border-radius:12px; padding:18px 22px; box-shadow:0 1px 4px rgba(20,10,30,0.05); justify-content:space-between;">
+                <div class="summary-col">
+                    <div class="summary-label">Draft</div>
+                    <div class="summary-count" x-text="quotes.length"></div>
+                    <div class="summary-sum" x-text="formatNOK(totalAmount)"></div>
+                </div>
+                <div class="summary-col">
+                    <div class="summary-label">Sent</div>
+                    <div class="summary-count" x-text="sentCount"></div>
+                    <div class="summary-sum" x-text="formatNOK(sentSum)"></div>
+                </div>
+                <div class="summary-col">
+                    <div class="summary-label">Accepted</div>
+                    <div class="summary-count" x-text="acceptedCount"></div>
+                    <div class="summary-sum" x-text="formatNOK(acceptedSum)"></div>
+                </div>
+                <button class="btn-green" style="margin-left:32px;" @click="createQuote">+ New Quote</button>
+            </div>
+            <div class="quotes-list">
+                <template x-for="quote in filteredAndSortedQuotes" :key="quote.id">
+                    <div class="quote-card" @click="viewQuote(quote.id)" style="cursor:pointer;">
+                        <div class="quote-row">
+                            <div class="quote-main">
+                                <div class="quote-title"><span x-text="quote.title"></span></div>
+                                <div class="quote-meta">
+                                    <span>Quote #<span x-text="quote.number"></span></span>
+                                    <span>|</span>
+                                    <span><strong>Customer:</strong> <span x-text="quote.customer"></span></span>
+                                    <span>|</span>
+                                    <span><strong>Created:</strong> <span x-text="formatDate(quote.date)"></span></span>
+                                    <span>|</span>
+                                    <span><strong>Last edited:</strong> <span x-text="formatDate(quote.lastEdited)"></span></span>
+                                </div>
+                            </div>
+                            <div class="quote-actions">
+                                <span class="quote-amount">
+                                    <span x-text="formatNOK(quote.amount)"></span>
+                                    <span style="font-size:0.92em; color:#BBBBBB; margin-left:6px;">eks. mva</span>
+                                </span>
+                                <div style="display:flex; gap:8px;">
+                                    <button class="icon-btn" style="background:#A64D79;" @click.stop="duplicateQuote(quote)">Duplicate</button>
+                                    <button class="icon-btn" style="background:#D9534F;" @click.stop="deleteQuote(quote.id)">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                <template x-if="filteredAndSortedQuotes.length === 0">
+                    <div style="color:#BBBBBB; text-align:center; margin-top:40px;">No quotes found.</div>
+                </template>
+            </div>
+        </div>
+    </div>
+    <script>
+    function quotesApp() {
+        const currencyFormatter = new Intl.NumberFormat('nb-NO', {
+            style: 'currency',
+            currency: 'NOK',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        function formatNOK(value) {
+            return currencyFormatter.format(value).replace('NOK', 'kr').replace(/\s+kr$/, ' kr');
+        }
+        function formatDate(dateStr) {
+            const d = new Date(dateStr);
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}.${month}.${year}`;
+        }
+        return {
+            search: '',
+            sortOption: 'date-desc',
+            quotes: [
+                { id: 1, title: 'Painting Apartment', number: 1001, customer: 'Acme Corp', date: '2024-06-01', lastEdited: '2024-06-10', amount: 25000, priceType: 'eks', status: 'sent' },
+                { id: 2, title: 'Renovation', number: 1002, customer: 'Beta Ltd', date: '2024-06-03', lastEdited: '2024-06-11', amount: 120000, priceType: 'eks', status: 'accepted' },
+                { id: 3, title: 'Garden Work', number: 1003, customer: 'Charlie AS', date: '2024-06-05', lastEdited: '2024-06-12', amount: 8000, priceType: 'eks', status: 'sent' }
+            ],
+            get filteredAndSortedQuotes() {
+                let arr = this.quotes.filter(q => {
+                    const s = this.search.toLowerCase();
+                    return (
+                        q.title.toLowerCase().includes(s) ||
+                        q.customer.toLowerCase().includes(s) ||
+                        String(q.number).includes(s)
+                    );
+                });
+                const [field, order] = this.sortOption.split('-');
+                arr = arr.sort((a, b) => {
+                    if(field==='date') {
+                        return order==='asc' ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date);
+                    } else if(field==='amount') {
+                        return order==='asc' ? a.amount-b.amount : b.amount-a.amount;
+                    } else if(field==='customer') {
+                        return order==='asc' ? a.customer.localeCompare(b.customer) : b.customer.localeCompare(a.customer);
+                    }
+                    return 0;
+                });
+                return arr;
+            },
+            get totalAmount() {
+                return this.quotes.reduce((sum, q) => sum + q.amount, 0);
+            },
+            get sentCount() {
+                return this.quotes.filter(q => q.status === 'sent').length;
+            },
+            get sentSum() {
+                return this.quotes.filter(q => q.status === 'sent').reduce((sum, q) => sum + q.amount, 0);
+            },
+            get acceptedCount() {
+                return this.quotes.filter(q => q.status === 'accepted').length;
+            },
+            get acceptedSum() {
+                return this.quotes.filter(q => q.status === 'accepted').reduce((sum, q) => sum + q.amount, 0);
+            },
+            formatNOK,
+            formatDate,
+            createQuote() {
+                window.location.href = 'quote.html';
+            },
+            viewQuote(id) {
+                window.location.href = 'quote.html?id=' + id;
+            },
+            duplicateQuote(quote) {
+                const maxId = Math.max(...this.quotes.map(q => q.id));
+                const maxNumber = Math.max(...this.quotes.map(q => q.number));
+                const today = new Date();
+                const dateStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+                const newQuote = { ...quote, id: maxId+1, number: maxNumber+1, date: dateStr, lastEdited: dateStr };
+                this.quotes.unshift(newQuote);
+                window.location.href = 'quote.html?id=' + newQuote.id;
+            },
+            deleteQuote(id) {
+                if(confirm('Are you sure you want to delete this quote?')) {
+                    this.quotes = this.quotes.filter(q => q.id !== id);
+                }
+            }
+        }
+    }
+    </script>
+    <script src="js/menu.js" defer></script>
+    <style>
+    .quotes-list {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+    .quote-card {
+        background: #23232b;
+        border: 1px solid #2C2C2C;
+        border-radius: 12px;
+        padding: 18px 22px;
+        box-shadow: 0 1px 4px rgba(20,10,30,0.05);
+        display: flex;
+        flex-direction: column;
+        transition: border 0.2s;
+    }
+    .quote-card:hover {
+        border: 1px solid #C27BA1;
+    }
+    .quote-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 18px;
+        flex-wrap: wrap;
+    }
+    .quote-main {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .quote-title {
+        font-size: 1.15em;
+        font-weight: 600;
+        color: #fff;
+    }
+    .quote-meta {
+        color: #BBBBBB;
+        font-size: 0.98em;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    .quote-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+        min-width: 120px;
+    }
+    .quote-amount {
+        color: #C27BA1;
+        font-size: 1.1em;
+        font-weight: 700;
+    }
+    @media (max-width: 700px) {
+        .quote-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .quote-actions {
+            align-items: flex-start;
+            min-width: 0;
+        }
+    }
+    .icon-btn {
+        padding: 4px 12px;
+        font-size: 0.98em;
+        border-radius: 6px;
+        border: none;
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        min-width: 0;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .icon-btn:hover {
+        filter: brightness(1.1);
+    }
+    .summary-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 90px;
+        flex: 1;
+    }
+    .summary-label {
+        color: #C27BA1;
+        font-weight: 700;
+        font-size: 1.05em;
+        margin-bottom: 2px;
+    }
+    .summary-count {
+        font-size: 1.3em;
+        font-weight: 700;
+        color: #fff;
+    }
+    .summary-sum {
+        color: #BBBBBB;
+        font-size: 1em;
+        font-weight: 400;
+        margin-top: 2px;
+    }
+    .sidebar {
+        width: 210px;
+        background: #181820;
+        border-right: 1px solid #2C2C2C;
+        display: flex;
+        flex-direction: column;
+        padding: 32px 0 0 0;
+        min-height: 100vh;
+    }
+    .sidebar-title {
+        color: #C27BA1;
+        font-size: 1.5em;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 36px;
+        letter-spacing: 1px;
+        font-family: 'Poppins', 'Segoe UI', 'Arial', sans-serif;
+    }
+    .sidebar-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .sidebar-link {
+        display: block;
+        color: #BBBBBB;
+        text-decoration: none;
+        font-size: 1.08em;
+        font-family: 'Poppins', 'Segoe UI', 'Arial', sans-serif;
+        padding: 12px 32px;
+        border-left: 4px solid transparent;
+        transition: background 0.18s, color 0.18s, border 0.18s;
+    }
+    .sidebar-link:hover, .sidebar-link.active {
+        background: #23232b;
+        color: #fff;
+        border-left: 4px solid #C27BA1;
+    }
+    .main-content {
+        padding: 0 0 0 0;
+        min-width: 0;
+        background: #121212;
+    }
+    @media (max-width: 900px) {
+        .sidebar {
+            width: 60px;
+            padding: 18px 0 0 0;
+        }
+        .sidebar-title {
+            font-size: 1em;
+            margin-bottom: 18px;
+        }
+        .sidebar-link {
+            font-size: 0.98em;
+            padding: 10px 10px;
+            text-align: center;
+        }
+    }
+    </style>
+</body>
+</html> 

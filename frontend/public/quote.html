@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handwork - Quote</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body>
+    <div id="menu-placeholder"></div>
+    <div class="container" x-data="quoteApp()">
+        <!-- Header -->
+        <div class="quote-header flex-row" style="gap: 32px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 32px;">
+            <div style="flex:2; min-width:320px;">
+                <h1>Quote for <span x-text="selectedCustomerName || 'Client Name'"></span></h1>
+                <div class="header-fields">
+                    <label for="jobTitle">Job title</label>
+                    <input id="jobTitle" type="text" placeholder="Title" x-model="jobTitle">
+                    <div class="header-details">
+                        <div>
+                            <div class="header-label">Property address</div>
+                            <div class="header-value">sdf<br>asdf, ff 123</div>
+                        </div>
+                        <div>
+                            <div class="header-label">Contact details</div>
+                            <div class="header-value">1234124<br><a href="mailto:asd@asd.asdf" style="color:#C27BA1;">asd@asd.asdf</a></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="flex:1; min-width:260px;">
+                <section class="quote-details-card">
+                    <div class="details-row" style="margin-bottom:8px;">Quote details</div>
+                    <div class="details-row" style="margin-bottom:8px;">Quote number <span style="margin-left:auto;">#<span x-text="quoteNumber"></span></span></div>
+                    <div class="details-row" style="margin-bottom:8px;">Sent on <span style="margin-left:auto;">Jun 26, 2025</span></div>
+                    <div class="details-row" style="margin-bottom:8px;">Salesperson <span style="margin-left:auto;">Demo User</span></div>
+                </section>
+            </div>
+        </div>
+        <!-- Introduction Section -->
+        <section>
+            <div class="section-header">Introduction</div>
+            <div class="intro-image" style="margin-bottom:12px;">
+                <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80" alt="Project" style="width:100%; max-height:220px; object-fit:cover; border-radius:10px;">
+            </div>
+            <h3 style="margin-bottom:8px;">Project Summary</h3>
+            <textarea placeholder="This quote outlines the services and materials needed to complete the work. Our team is committed to delivering high-quality results that exceed our client's expectations. Please review the details below, and don't hesitate to reach out with any questions."
+                rows="3" style="width:100%;"
+                x-ref="introDescription"
+                @input="$refs.introDescription.style.height = 'auto'; $refs.introDescription.style.height = $refs.introDescription.scrollHeight + 'px'"
+            ></textarea>
+        </section>
+        <!-- Product/Service Section -->
+        <section>
+            <div class="section-header">Product / Service</div>
+            <div class="line-items-box">
+                <template x-for="(item, index) in lineItems" :key="index">
+                    <div class="line-item-outer">
+                        <div class="line-item-row">
+                            <input type="text" placeholder="Name" x-model="item.description" style="flex:2;">
+                            <div class="qty-unit-group merged">
+                                <input type="number" min="1" placeholder="Qty" x-model.number="item.qty" style="width:80px; border-top-right-radius:0; border-bottom-right-radius:0;">
+                                <div class="qty-unit-divider"></div>
+                                <select x-model="item.unitType" style="width:70px; border-top-left-radius:0; border-bottom-left-radius:0;">
+                                    <option value="stk">stk</option>
+                                    <option value="timer">timer</option>
+                                    <option value="m2">m²</option>
+                                    <option value="kg">kg</option>
+                                </select>
+                            </div>
+                            <div class="unit-price-group">
+                                <input type="number" min="0" step="0.01" placeholder="Unit Price" x-model="item.unitPrice" @input="formatUnitPriceInput($event, index)">
+                                <span class="unit-price-suffix">kr</span>
+                            </div>
+                        </div>
+                        <div class="line-item-desc-row">
+                            <textarea placeholder="Description" x-model="item.longDescription" rows="2" style="width:100%;"
+                                x-ref="descRow + index"
+                                @input="$refs['descRow' + index].style.height = 'auto'; $refs['descRow' + index].style.height = $refs['descRow' + index].scrollHeight + 'px'"
+                            ></textarea>
+                        </div>
+                        <div class="line-item-sum-actions-row">
+                            <div class="line-item-sum-row">
+                                <div class="line-item-sum-col">
+                                    <span>Subtotal:</span>
+                                    <strong x-text="formatNOK(item.qty * item.unitPrice)"></strong>
+                                </div>
+                                <div class="line-item-sum-col">
+                                    <span>MVA:</span>
+                                    <strong x-text="formatNOK(item.qty * item.unitPrice * vatRate / 100)"></strong>
+                                </div>
+                                <div class="line-item-sum-col">
+                                    <span>Total inkl. MVA:</span>
+                                    <strong x-text="formatNOK(item.qty * item.unitPrice * (1 + vatRate / 100))"></strong>
+                                </div>
+                            </div>
+                            <div class="line-item-actions-row">
+                                <button type="button" @click="removeLineItem(index)">Delete</button>
+                                <button type="button" @click="duplicateLineItem(index)">Duplicate</button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <button type="button" @click="addLineItem">+ Add Line Item</button>
+            </div>
+        </section>
+        <!-- Attachments Section -->
+        <section>
+            <div class="section-header">Attachments</div>
+            <div class="attachments-box">
+                <div class="attachment-item">
+                    <span>PDFSample-e4d5c6f9.pdf</span> <span style="margin-left:auto; color:#C27BA1;">79.6 KB</span>
+                </div>
+                <div style="margin-top:10px;">
+                    <button type="button" class="secondary-btn" disabled>Select Files</button>
+                    <span style="margin-left:10px; color:#D5A6BD;">Select or drag files here to upload</span>
+                </div>
+            </div>
+        </section>
+        <!-- Client message and contract/disclaimer -->
+        <section>
+            <label for="clientMessage">Client message</label>
+            <textarea id="clientMessage" x-model="clientMessage" placeholder="Message to client" rows="3" style="width:100%;"
+                x-ref="clientMessage"
+                @input="$refs.clientMessage.style.height = 'auto'; $refs.clientMessage.style.height = $refs.clientMessage.scrollHeight + 'px'"
+            ></textarea>
+        </section>
+        <section>
+            <label for="contractDisclaimer">Contract / Disclaimer</label>
+            <textarea id="contractDisclaimer" x-model="contractDisclaimer" placeholder="Enter contract or disclaimer text here..." rows="3" style="width:100%;"
+                x-ref="contractDisclaimer"
+                @input="$refs.contractDisclaimer.style.height = 'auto'; $refs.contractDisclaimer.style.height = $refs.contractDisclaimer.scrollHeight + 'px'"
+            ></textarea>
+        </section>
+        <!-- Summary and actions -->
+        <div class="flex-row" style="gap: 32px; align-items: flex-start; flex-wrap: wrap; margin-top:32px;">
+            <div style="flex:2; min-width:320px;"></div>
+            <div style="flex:1; min-width:260px;">
+                <section class="summary-card">
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <span>Subtotal</span>
+                            <span x-text="formatNOK(subtotal)"></span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span>MVA (25%)</span>
+                            <span x-text="formatNOK(vatTotal)"></span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-weight:700; font-size:1.1em; margin-top:10px;">
+                            <span>Total</span>
+                            <span x-text="formatNOK(total)"></span>
+                        </div>
+                    </div>
+                </section>
+                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+                    <button type="button" class="secondary-btn" style="background:#D9534F;" @click="resetForm">Delete</button>
+                    <button type="button" class="secondary-btn" @click="resetForm">Cancel</button>
+                    <button type="submit" @click="submitQuote">Update Quote</button>
+                    <button type="button" class="btn-green">Update and send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/quote.js"></script>
+    <script src="js/menu.js" defer></script>
+</body>
+</html>
