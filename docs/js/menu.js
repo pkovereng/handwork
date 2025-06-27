@@ -4,8 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Use an absolute path from the site root
-    fetch('/handwork/menu.html') 
+    // Path is relative to the HTML file that includes this script.
+    // Since all HTML files are in the same directory as menu.html, this works everywhere.
+    fetch('menu.html') 
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok for menu.html');
