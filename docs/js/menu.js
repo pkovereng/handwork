@@ -4,8 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // The menu.js script is in the js/ subdirectory, so we go up one level
-    fetch('../menu.html') 
+    // Use an absolute path from the site root
+    fetch('/handwork/menu.html') 
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok for menu.html');
